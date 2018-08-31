@@ -1,0 +1,97 @@
+<!-- https://mvnrepository.com/artifact/org.apache.tomcat.embed/tomcat-embed-jasper -->
+		<dependency>
+			<groupId>org.apache.tomcat.embed</groupId>
+			<artifactId>tomcat-embed-jasper</artifactId>
+			<version>9.0.11</version>
+		</dependency>
+
+
+
+@RestController
+public class FrontController {
+
+	@RequestMapping("/")
+	public String consume(){
+		return "REST Consumer";
+	}
+	
+	@RequestMapping(value="/discountadd")
+	public DiscountBean consumeMessage(){
+		DiscountBean discount=new DiscountBean();
+		discount.setDiscountId("DS50");
+		discount.setDiscountPercent(50);
+		discount.setTimePeriod(Date.valueOf("2018-09-03"));
+		RestTemplate restTemplate = new RestTemplate();
+		DiscountBean discount1 = restTemplate.postForObject("http://localhost:9090/discountDB",discount, DiscountBean.class);
+		return discount1;
+	}
+}
+
+
+package com.cg.example.ExampleClient.controller;
+
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+@Controller
+public class JspController {
+
+	@RequestMapping("/discount")
+	public String welcomePage(String id) {
+		
+		return "discount";
+		
+	}
+	
+
+}
+
+package com.cg.capstore.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.cg.capstore.bean.DiscountBean;
+import com.cg.capstore.bean.ProductBean;
+import com.cg.capstore.service.ApplyDiscountInterface;
+
+@RestController
+public class ControllerDiscount {
+
+	@Autowired
+	ApplyDiscountInterface service;
+
+	@RequestMapping(value = "/discountDB", method = RequestMethod.POST)
+	public DiscountBean discountDB(@RequestBody DiscountBean discount) {
+
+		return service.discountDB(discount);
+	}
+	
+	
+}
+
+package com.cg.capstore.service;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import com.cg.capstore.bean.DiscountBean;
+import com.cg.capstore.repo.DiscountRepo;
+import com.cg.capstore.repo.DiscountRepo2;
+
+@Service
+public class ApplyDiscountImpl implements ApplyDiscountInterface {
+	@Autowired
+	DiscountRepo repo;
+	
+	@Autowired
+	DiscountRepo2 repo2;
+
+	@Override
+	public DiscountBean discountDB(DiscountBean discount) {		
+		return repo.save(discount);
+	}
+
+}
